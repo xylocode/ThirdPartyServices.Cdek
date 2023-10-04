@@ -33,10 +33,6 @@ namespace XyloCode.ThirdPartyServices.Cdek
         private readonly JsonSerializerOptions jso;
         private readonly QueryStringSerializer qss;
 
-        public HttpMessageHandler Tracer { get; set; }
-
-
-
         public CdekClient(HttpMessageHandler httpMessageHandler = null, bool disposeHandler = true) :
             this(testClientId, testClientSecret, testBaseUri, httpMessageHandler, disposeHandler)
         {
