@@ -7,20 +7,21 @@ using System.Web;
 
 namespace XyloCode.ThirdPartyServices.Cdek.Helpers
 {
-    public enum ArraySerializationMode
-    {
-        Index,
-        NameSquareBrackets,
-        NameOnly,
-        Comma,
-    }
-
+    
     public class QueryStringSerializer
     {
+        public enum ArraySerializationModeEnum
+        {
+            Index,
+            NameSquareBrackets,
+            NameOnly,
+            Comma,
+        }
+
         private NameValueCollection nvc;
         public Func<string, string> NameConverter { get; set; }
 
-        public ArraySerializationMode ArraySerializationMode { get; set; }
+        public ArraySerializationModeEnum ArraySerializationMode { get; set; }
 
         public string Serialize(object request)
         {
@@ -182,9 +183,9 @@ namespace XyloCode.ThirdPartyServices.Cdek.Helpers
         {
             return ArraySerializationMode switch
             {
-                ArraySerializationMode.Index => $"{name}[{key}]",
-                ArraySerializationMode.NameSquareBrackets => $"{name}[]",
-                ArraySerializationMode.NameOnly => name,
+                ArraySerializationModeEnum.Index => $"{name}[{key}]",
+                ArraySerializationModeEnum.NameSquareBrackets => $"{name}[]",
+                ArraySerializationModeEnum.NameOnly => name,
                 _ => throw new NotImplementedException(),
             };
         }

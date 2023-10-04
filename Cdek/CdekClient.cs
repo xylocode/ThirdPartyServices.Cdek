@@ -73,7 +73,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
             qss = new QueryStringSerializer
             {
                 NameConverter = new JsonSnakeCaseNamingPolicy().ConvertName,
-                ArraySerializationMode = ArraySerializationMode.NameOnly,
+                ArraySerializationMode = QueryStringSerializer.ArraySerializationModeEnum.NameOnly,
             };
         }
 
