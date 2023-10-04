@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using XyloCode.ThirdPartyServices.Cdek.Helpers;
 
 namespace XyloCode.ThirdPartyServices.Cdek.Requests
 {
+    [IsQueryString]
     public class CitiesRequest
     {
         /// <summary>

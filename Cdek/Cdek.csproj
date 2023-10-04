@@ -8,7 +8,7 @@
     <RootNamespace>XyloCode.ThirdPartyServices.Cdek</RootNamespace>
     <PackageId>XyloCode.ThirdPartyServices.Cdek</PackageId>
     <Title>Cdek</Title>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>xylocode</Authors>
 	  <Copyright>Copyright (c) 2023 Sergey Korobeynikov</Copyright>
 	  <PackageTags>CDEK; SDEK; API</PackageTags>
@@ -24,6 +24,8 @@
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <PackageReleaseNotes>First release. Requires debugging, performance is not guaranteed.</PackageReleaseNotes>
 	  <ApplicationIcon>favicon.ico</ApplicationIcon>
+	  <IncludeSymbols>True</IncludeSymbols>
+	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 

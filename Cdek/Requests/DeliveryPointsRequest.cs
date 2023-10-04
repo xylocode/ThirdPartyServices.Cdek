@@ -1,8 +1,10 @@
 ﻿using System;
 using XyloCode.ThirdPartyServices.Cdek.Enums;
+using XyloCode.ThirdPartyServices.Cdek.Helpers;
 
 namespace XyloCode.ThirdPartyServices.Cdek.Models
 {
+    [IsQueryString]
     public class DeliveryPointsRequest
     {
         /// <summary>

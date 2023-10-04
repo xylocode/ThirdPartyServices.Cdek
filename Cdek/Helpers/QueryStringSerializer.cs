@@ -7,10 +7,20 @@ using System.Web;
 
 namespace XyloCode.ThirdPartyServices.Cdek.Helpers
 {
+    public enum ArraySerializationMode
+    {
+        Index,
+        NameSquareBrackets,
+        NameOnly,
+        Comma,
+    }
+
     public class QueryStringSerializer
     {
         private NameValueCollection nvc;
         public Func<string, string> NameConverter { get; set; }
+
+        public ArraySerializationMode ArraySerializationMode { get; set; }
 
         public string Serialize(object request)
         {
@@ -168,7 +178,16 @@ namespace XyloCode.ThirdPartyServices.Cdek.Helpers
         protected virtual string TimeSpanToStr(TimeSpan value) => value.ToString();
         protected virtual string DateOnlyToStr(DateOnly value) => value.ToString("yyyy-MM-dd");
         protected virtual string TimeOnlyToStr(TimeOnly value) => value.ToString();
-        protected virtual string GetArrayKey(string name, int key)=> $"{name}[{key}]";
+        protected virtual string GetArrayKey(string name, int key)
+        {
+            return ArraySerializationMode switch
+            {
+                ArraySerializationMode.Index => $"{name}[{key}]",
+                ArraySerializationMode.NameSquareBrackets => $"{name}[]",
+                ArraySerializationMode.NameOnly => name,
+                _ => throw new NotImplementedException(),
+            };
+        }
 
         protected virtual string GetEnumValue(object value)
         {

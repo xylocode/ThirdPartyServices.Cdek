@@ -72,7 +72,8 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
             qss = new QueryStringSerializer
             {
-                NameConverter = new JsonSnakeCaseNamingPolicy().ConvertName
+                NameConverter = new JsonSnakeCaseNamingPolicy().ConvertName,
+                ArraySerializationMode = ArraySerializationMode.NameOnly,
             };
         }
 
@@ -104,17 +105,10 @@ namespace XyloCode.ThirdPartyServices.Cdek
             };
             var hrm = new HttpRequestMessage(httpMethod, path);
 
-            int cnt = 1;
-
-        Request:
             var res = httpClient.Send(hrm);
 
             if (!res.IsSuccessStatusCode)
-            {
-                if (--cnt > 0)
-                    goto Request;
                 throw new Exception(res.ReasonPhrase);
-            }
 
             return res
                 .Content
@@ -131,8 +125,6 @@ namespace XyloCode.ThirdPartyServices.Cdek
             if (method == RequestMethod.GET || method == RequestMethod.DELETE)
                 path = string.Concat(path, "?", qss.Serialize(req));
 
-            int cnt = 1;
-        Request:
             HttpResponseMessage res;
 
             switch (method)
@@ -170,13 +162,9 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 default:
                     throw new NotSupportedException();
             }
-            
+
             if (!res.IsSuccessStatusCode)
-            {
-                if (--cnt > 0)
-                    goto Request;
                 throw new Exception(res.ReasonPhrase);
-            }
 
             return res
                 .Content
@@ -198,18 +186,12 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
             httpClient.DefaultRequestHeaders.Authorization = null;
             
-            int cnt = 1;
-        Request:
             var res = httpClient
                 .PostAsync("/v2/oauth/token?parameters", form)
                 .Result;
 
             if (!res.IsSuccessStatusCode)
-            {
-                if (--cnt > 0)
-                    goto Request;
                 throw new Exception(res.ReasonPhrase);
-            }
 
             var auth = res
                 .Content

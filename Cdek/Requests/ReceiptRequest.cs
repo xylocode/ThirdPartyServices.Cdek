@@ -1,7 +1,9 @@
 ﻿using System;
+using XyloCode.ThirdPartyServices.Cdek.Helpers;
 
 namespace XyloCode.ThirdPartyServices.Cdek.Requests
 {
+    [IsQueryString]
     public class ReceiptRequest
     {
         /// <summary>
