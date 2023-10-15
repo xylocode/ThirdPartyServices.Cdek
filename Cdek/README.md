@@ -13,9 +13,7 @@ An unofficial .NET client library for accessing the CDEK API v2.0.
 
 ## CDEK
 
-The express delivery company was founded in Novosibirsk by graduates of the Novosibirsk State University Leonid Goldort and Vyacheslav Piksayev in 2000 to transport goods from the Korzina.ru online store to the cities of Siberia and the Russian Far East. A year later, the company began operating in Moscow, and two years later, in Saint Petersburg.
-
-In 2020, the company invested more than 600 million rubles to create its own postamat network.
+The express delivery company was founded in Novosibirsk by graduates of the Novosibirsk State University Leonid Goldort and Vyacheslav Piksayev in 2000 to transport goods from the Korzina.ru online store to the cities of Siberia and the Russian Far East.
 
 Official website: [https://www.cdek.ru/](https://www.cdek.ru/).
 
@@ -34,7 +32,7 @@ namespace CdekTest
             var clientId = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
             var clientSecret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
             
-            var tracer = new LoggingHandler(); // for trace request, needed only for debugging
+            var tracer = new LoggingHandler(); // for tracing, needed only for debugging
 
             var api = new CdekClient(clientId, clientSecret, httpMessageHandler: tracer);
             var result = api.GetOrder("1234567890");

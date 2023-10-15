@@ -90,18 +90,25 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 Auth();
             Thread.Sleep(1000);
 
-            HttpMethod httpMethod = method switch
-            {
-                RequestMethod.GET => HttpMethod.Get,
-                RequestMethod.POST => HttpMethod.Post,
-                RequestMethod.PUT => HttpMethod.Put,
-                RequestMethod.DELETE => HttpMethod.Delete,
-                RequestMethod.PATCH => HttpMethod.Patch,
-                _ => throw new NotSupportedException(),
-            };
-            var hrm = new HttpRequestMessage(httpMethod, path);
 
-            var res = httpClient.Send(hrm);
+            HttpResponseMessage res;
+            switch (method)
+            {
+                case RequestMethod.GET:
+                    res = httpClient
+                        .GetAsync(path)
+                        .Result;
+                    break;
+
+                case RequestMethod.DELETE:
+                    res = httpClient
+                        .DeleteAsync(path)
+                        .Result;
+                    break;
+
+                default:
+                    throw new NotSupportedException();
+            }
 
             if (!res.IsSuccessStatusCode)
                 throw new Exception(res.ReasonPhrase);
