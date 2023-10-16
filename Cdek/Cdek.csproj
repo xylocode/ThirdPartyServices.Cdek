@@ -11,7 +11,7 @@
     <Version>1.1.1</Version>
     <Authors>xylocode</Authors>
 	  <Copyright>Copyright (c) 2023 Sergey Korobeynikov</Copyright>
-	  <PackageTags>CDEK; SDEK; API</PackageTags>
+	  <PackageTags>CDEK; СДЭК; API</PackageTags>
 	  <PackageIcon>LOGO.png</PackageIcon>
 	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	  <Product>XyloCode.ThirdPartyServices.Cdek</Product>

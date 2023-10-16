@@ -157,9 +157,12 @@ namespace XyloCode.ThirdPartyServices.Cdek
                     break;
 
                 case RequestMethod.PATCH:
-                    res = httpClient
-                        .PatchAsync(path, JsonContent.Create(req, options: jso))
-                        .Result;
+#if NET6_0
+                    res = httpClient.PatchAsync(path, JsonContent.Create(req, options: jso)).Result;
+#endif
+#if NET7_0
+                    res = httpClient.PatchAsJsonAsync(path, req, jso).Result;
+#endif
                     break;
 
                 default:
