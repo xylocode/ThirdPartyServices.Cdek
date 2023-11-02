@@ -169,9 +169,6 @@ namespace XyloCode.ThirdPartyServices.Cdek
                     throw new NotSupportedException();
             }
 
-            if (!res.IsSuccessStatusCode)
-                throw new Exception(res.ReasonPhrase);
-
             return res
                 .Content
                 .ReadFromJsonAsync<TRes>(jso)
