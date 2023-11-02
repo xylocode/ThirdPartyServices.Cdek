@@ -520,5 +520,39 @@ namespace XyloCode.ThirdPartyServices.Cdek
             var req = new ReturnRequest { TariffCode = tariffCode };
             return Send<EntityResponse<Entity>, ReturnRequest>(RequestMethod.POST, $"/v2/orders/{orderUuid}/clientReturn", req);
         }
+
+
+        /// <summary>
+        /// Конвертор кода валюты из международного стандарта ISO 4217 во внутренний код валюты СДЭК. 
+        /// </summary>
+        /// <param name="iso4217Code">Код валюты по международному стандарту ISO 4217.</param>
+        /// <returns>Внутренний код валюты СДЭК</returns>
+        public static int GetCdekCurrencyCode(int iso4217Code)
+        {
+            return iso4217Code switch
+            {
+                643 => 1, // Рубль
+                398 => 2, // Тенге
+                840 => 3, // Доллар 
+                978 => 4, // Евро
+                826 => 5, // Фунт стерлингов
+                156 => 6, // Юань
+                933 => 7, // Белорусские рубли
+                980 => 8, // Гривна
+                417 => 9, // Киргизский сом
+                51 => 10, // Армянский драм
+                949 => 11, // Турецкая лира
+                764 => 12, // Тайский бат
+                410 => 13, // Вона
+                784 => 14, // Дирхам
+                860 => 15, // Сум
+                496 => 16, // Тугрик
+                985 => 17, // Злотый
+                944 => 18, // Манат
+                981 => 19, // Лари
+                392 => 55, // Японская иена
+                _ => throw new NotSupportedException(),
+            };
+        }
     }
 }
