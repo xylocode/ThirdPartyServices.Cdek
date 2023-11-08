@@ -364,3 +364,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /CdekTest/CdekTest.csproj
+/CdekTest/Program.cs
