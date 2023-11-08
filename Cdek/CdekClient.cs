@@ -63,8 +63,11 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 PropertyNamingPolicy = new JsonSnakeCaseNamingPolicy(),
             };
+            jso.Converters.Add(new DateOnlyJsonConverter());
+            jso.Converters.Add(new DateTimeJsonConverter());
+            jso.Converters.Add(new DateTimeOffsetJsonConverter());
             jso.Converters.Add(new JsonStringEnumConverter());
-            jso.Converters.Add(new DateTimeOffsetConverter());
+
 
             qss = new QueryStringSerializer
             {
@@ -109,9 +112,6 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 default:
                     throw new NotSupportedException();
             }
-
-            if (!res.IsSuccessStatusCode)
-                throw new Exception(res.ReasonPhrase);
 
             return res
                 .Content

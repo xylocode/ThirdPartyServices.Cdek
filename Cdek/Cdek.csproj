@@ -8,30 +8,24 @@
     <RootNamespace>XyloCode.ThirdPartyServices.Cdek</RootNamespace>
     <PackageId>XyloCode.ThirdPartyServices.Cdek</PackageId>
     <Title>Cdek</Title>
-    <Version>1.1.2</Version>
+    <Version>1.2.0</Version>
     <Authors>xylocode</Authors>
 	  <Copyright>Copyright (c) 2023 Sergey Korobeynikov</Copyright>
 	  <PackageTags>CDEK; СДЭК; API</PackageTags>
 	  <PackageIcon>LOGO.png</PackageIcon>
 	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	  <Product>XyloCode.ThirdPartyServices.Cdek</Product>
-	  <Description>An unofficial client library for accessing the CDEK API v2.0.</Description>
+	  <Description>An unofficial full support client library for accessing the CDEK API v2.0.</Description>
 	  <PackageProjectUrl>https://xylocode.com/third-party-services/cdek/</PackageProjectUrl>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <RepositoryUrl>https://github.com/xylocode/ThirdPartyServices.Cdek</RepositoryUrl>
 	  <RepositoryType>git</RepositoryType>
 	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageReleaseNotes>First release. Requires debugging, performance is not guaranteed.</PackageReleaseNotes>
-	  <ApplicationIcon>favicon.ico</ApplicationIcon>
+	  <PackageReleaseNotes>Fixed a bug related to the ISO 8601 date and time format: YYYY-MM-DDThh:mm:ss±hhmm.</PackageReleaseNotes>
 	  <IncludeSymbols>True</IncludeSymbols>
 	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-
-
-	<ItemGroup>
-		<Content Include="favicon.ico" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="LICENSE.txt" Pack="true" PackagePath="" />

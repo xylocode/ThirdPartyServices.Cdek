@@ -4,21 +4,20 @@ using System.Text.Json.Serialization;
 
 namespace XyloCode.ThirdPartyServices.Cdek.Helpers
 {
-    internal class DateTimeOffsetConverter : JsonConverter<DateTimeOffset>
+    internal class DateTimeOffsetJsonConverter : JsonConverter<DateTimeOffset>
     {
         public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var s = reader.GetString();
-            s = string.Concat(s.AsSpan(0, s.Length - 2), ":", s.AsSpan(s.Length - 2));
-            if (DateTimeOffset.TryParse(s, out DateTimeOffset result))
-                return result;
-
-            throw new Exception();
+            return DateTimeOffset.Parse(s);
         }
 
         public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value);
+            var dateTime = value.ToString("s");
+            var sign = value.Offset.TotalSeconds >= 0 ? '+' : '-';
+            var offset = value.Offset.ToString("hhmm");
+            writer.WriteStringValue(dateTime + sign + offset);
         }
     }
 }

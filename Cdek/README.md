@@ -1,6 +1,6 @@
 ﻿# CDEK API client library
 
-An unofficial .NET client library for accessing the CDEK API v2.0.
+An unofficial .NET full support client library for accessing the CDEK API v2.0.
 
 - [NuGet](https://www.nuget.org/packages/XyloCode.ThirdPartyServices.Cdek) (.NET library)
 - [GitHub](https://github.com/xylocode/ThirdPartyServices.Cdek) (source code)
@@ -16,6 +16,10 @@ An unofficial .NET client library for accessing the CDEK API v2.0.
 The express delivery company was founded in Novosibirsk by graduates of the Novosibirsk State University Leonid Goldort and Vyacheslav Piksayev in 2000 to transport goods from the Korzina.ru online store to the cities of Siberia and the Russian Far East.
 
 Official website: [https://www.cdek.ru/](https://www.cdek.ru/).
+
+## Supported Methods
+
+Full support.
 
 ## How to use
 
