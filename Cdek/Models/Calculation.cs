@@ -13,7 +13,7 @@ namespace XyloCode.ThirdPartyServices.Cdek.Models
         /// Дата и время планируемой передачи заказа
         /// По умолчанию - текущая
         /// </summary>
-        public DateOnly? Date { get; set; }
+        public DateTime? Date { get; set; }
 
         /// <summary>
         /// Тип заказа (для проверки доступности тарифа и дополнительных услуг по типу заказа):
