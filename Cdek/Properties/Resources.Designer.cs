@@ -63,6 +63,16 @@ namespace XyloCode.ThirdPartyServices.Cdek.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Byte[].
         /// </summary>
+        internal static byte[] AdditionalOrderStatusesJson {
+            get {
+                object obj = ResourceManager.GetObject("AdditionalOrderStatusesJson", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Byte[].
+        /// </summary>
         internal static byte[] CurrenciesJson {
             get {
                 object obj = ResourceManager.GetObject("CurrenciesJson", resourceCulture);
@@ -83,9 +93,29 @@ namespace XyloCode.ThirdPartyServices.Cdek.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Byte[].
         /// </summary>
-        internal static byte[] RatesJson {
+        internal static byte[] DeliveryProblemsJson {
             get {
-                object obj = ResourceManager.GetObject("RatesJson", resourceCulture);
+                object obj = ResourceManager.GetObject("DeliveryProblemsJson", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Byte[].
+        /// </summary>
+        internal static byte[] NonCallReasonsJson {
+            get {
+                object obj = ResourceManager.GetObject("NonCallReasonsJson", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Byte[].
+        /// </summary>
+        internal static byte[] TariffsJson {
+            get {
+                object obj = ResourceManager.GetObject("TariffsJson", resourceCulture);
                 return ((byte[])(obj));
             }
         }

@@ -1,3 +1,102 @@
 ﻿[
-
+  {
+    "CdekCurrencyId": 1,
+    "Id": 643,
+    "Code": "RUB"
+  },
+  {
+    "CdekCurrencyId": 2,
+    "Id": 398,
+    "Code": "KZT"
+  },
+  {
+    "CdekCurrencyId": 3,
+    "Id": 840,
+    "Code": "USD"
+  },
+  {
+    "CdekCurrencyId": 4,
+    "Id": 978,
+    "Code": "EUR"
+  },
+  {
+    "CdekCurrencyId": 5,
+    "Id": 826,
+    "Code": "GBP"
+  },
+  {
+    "CdekCurrencyId": 6,
+    "Id": 156,
+    "Code": "CNY"
+  },
+  {
+    "CdekCurrencyId": 7,
+    "Id": 933,
+    "Code": "BYR"
+  },
+  {
+    "CdekCurrencyId": 8,
+    "Id": 980,
+    "Code": "UAH"
+  },
+  {
+    "CdekCurrencyId": 9,
+    "Id": 417,
+    "Code": "KGS"
+  },
+  {
+    "CdekCurrencyId": 10,
+    "Id": 51,
+    "Code": "AMD"
+  },
+  {
+    "CdekCurrencyId": 11,
+    "Id": 949,
+    "Code": "TRY"
+  },
+  {
+    "CdekCurrencyId": 12,
+    "Id": 764,
+    "Code": "THB"
+  },
+  {
+    "CdekCurrencyId": 13,
+    "Id": 410,
+    "Code": "KRW"
+  },
+  {
+    "CdekCurrencyId": 14,
+    "Id": 784,
+    "Code": "AED"
+  },
+  {
+    "CdekCurrencyId": 15,
+    "Id": 860,
+    "Code": "UZS"
+  },
+  {
+    "CdekCurrencyId": 16,
+    "Id": 496,
+    "Code": "MNT"
+  },
+  {
+    "CdekCurrencyId": 17,
+    "Id": 985,
+    "Code": "PLN"
+  },
+  {
+    "CdekCurrencyId": 18,
+    "Id": 944,
+    "Code": "AZN"
+  },
+  {
+    "CdekCurrencyId": 19,
+    "Id": 981,
+    "Code": "GEL"
+  },
+  {
+    "CdekCurrencyId": 55,
+    "Id": 392,
+    "Code": "JPY"
+  }
 ]

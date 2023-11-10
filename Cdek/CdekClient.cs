@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Reflection;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -74,6 +78,33 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 NameConverter = new JsonSnakeCaseNamingPolicy().ConvertName,
                 ArraySerializationMode = QueryStringSerializer.ArraySerializationModeEnum.NameOnly,
             };
+        }
+
+        static CdekClient()
+        {
+            var currencies = DeserializeList<Currency>(Properties.Resources.CurrenciesJson);
+            Currencies = new(currencies.ToDictionary(x => x.CdekCurrencyId));
+            Currencies2 = new(currencies.ToDictionary(x => x.Id, x => x.CdekCurrencyId));
+
+            var tariffs = DeserializeList<Tariff>(Properties.Resources.TariffsJson)
+                .ToDictionary(x => x.Id);
+            Tariffs = new(tariffs);
+
+            var deliveryModes = DeserializeList<IdName>(Properties.Resources.DeliveryModesJson)
+                .ToDictionary(x => x.Id, x => x.Name);
+            DeliveryModes = new(deliveryModes);
+
+            var additionalOrderStatuses = DeserializeList<IdName>(Properties.Resources.AdditionalOrderStatusesJson)
+                .ToDictionary(x => x.Id, x => x.Name);
+            AdditionalOrderStatuses = new(additionalOrderStatuses);
+
+            var deliveryProblems = DeserializeList<IdName>(Properties.Resources.DeliveryProblemsJson)
+                .ToDictionary(x => x.Id, x => x.Name);
+            DeliveryProblems = new(deliveryProblems);
+
+            var nonCallReasons = DeserializeList<IdName>(Properties.Resources.NonCallReasonsJson)
+                .ToDictionary(x => x.Id, x => x.Name);
+            NonCallReasons = new(nonCallReasons);
         }
 
         public bool IsTest => isTest;
@@ -193,9 +224,6 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 .PostAsync("/v2/oauth/token?parameters", form)
                 .Result;
 
-            if (!res.IsSuccessStatusCode)
-                throw new Exception(res.ReasonPhrase);
-
             var auth = res
                 .Content
                 .ReadFromJsonAsync<Models.Authorization>(jso)
@@ -221,6 +249,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// Есть возможность получить информацию в том числе о заказах, которые были созданы через другие каналы(личный кабинет, протокол v.1.5 и др.).
         /// Но только по тем, которые были созданы после выдачи индивидуальных ключей доступа.
         /// <param name="uuid">Идентификатор заказа в ИС СДЭК, по которому необходима информация</param>
+        /// <summary>
         public EntityResponse<Order> GetOrder(Guid uuid) =>
             Send<EntityResponse<Order>>(RequestMethod.GET, $"/v2/orders/{uuid}");
 
@@ -229,6 +258,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// Есть возможность получить информацию в том числе о заказах, которые были созданы через другие каналы(личный кабинет, протокол v.1.5 и др.).
         /// Но только по тем, которые были созданы после выдачи индивидуальных ключей доступа.
         /// <param name="cdekNumber">Номер заказа СДЭК, по которому необходима информация</param>
+        /// <summary>
         public EntityResponse<Order> GetOrder(string cdekNumber) =>
             Send<EntityResponse<Order>>(RequestMethod.GET, $"/v2/orders?cdek_number={cdekNumber}");
 
@@ -519,6 +549,39 @@ namespace XyloCode.ThirdPartyServices.Cdek
         }
 
 
+        #region Статические справочники
+        /// <summary>
+        /// Приложение 1. Валюты калькулятора
+        /// </summary>
+        public static ReadOnlyDictionary<int, Currency> Currencies { get; private set; }
+        public static ReadOnlyDictionary<int, int> Currencies2 { get; private set; }
+
+        /// <summary>
+        /// Приложение 2. Тарифы СДЭК
+        /// </summary>
+        public static ReadOnlyDictionary<int, Tariff> Tariffs { get; private set; }
+
+        /// <summary>
+        /// Приложение 3. Режимы доставки
+        /// </summary>
+        public static ReadOnlyDictionary<int, string> DeliveryModes { get; private set; }
+
+        /// <summary>
+        /// Приложение 2. Дополнительные статусы заказов
+        /// </summary>
+        public static ReadOnlyDictionary<int, string> AdditionalOrderStatuses { get; private set; }
+
+        /// <summary>
+        /// Приложение 4. Проблемы доставки
+        /// </summary>
+        public static ReadOnlyDictionary<int, string> DeliveryProblems { get; private set; }
+
+        /// <summary>
+        /// Приложение 5. Причины недозвона
+        /// </summary>
+        public static ReadOnlyDictionary<int, string> NonCallReasons { get; private set; }
+
+
         /// <summary>
         /// Конвертор кода валюты из международного стандарта ISO 4217 во внутренний код валюты СДЭК. 
         /// </summary>
@@ -526,30 +589,33 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// <returns>Внутренний код валюты СДЭК</returns>
         public static int GetCdekCurrencyCode(int iso4217Code)
         {
-            return iso4217Code switch
-            {
-                643 => 1, // Рубль
-                398 => 2, // Тенге
-                840 => 3, // Доллар 
-                978 => 4, // Евро
-                826 => 5, // Фунт стерлингов
-                156 => 6, // Юань
-                933 => 7, // Белорусские рубли
-                980 => 8, // Гривна
-                417 => 9, // Киргизский сом
-                51 => 10, // Армянский драм
-                949 => 11, // Турецкая лира
-                764 => 12, // Тайский бат
-                410 => 13, // Вона
-                784 => 14, // Дирхам
-                860 => 15, // Сум
-                496 => 16, // Тугрик
-                985 => 17, // Злотый
-                944 => 18, // Манат
-                981 => 19, // Лари
-                392 => 55, // Японская иена
-                _ => throw new NotSupportedException(),
-            };
+            return Currencies2[iso4217Code];
         }
+        
+        private static IEnumerable<T> DeserializeList<T>(byte[] fileData)
+            where T : class, new()
+        {
+            var json = GetFileData(fileData);
+            return JsonSerializer.Deserialize<List<T>>(json);
+        }
+
+        private static string GetFileData(byte[] bytes)
+        {
+            var preamble = Encoding.UTF8.GetPreamble();
+            bool withPreample = true;
+            if (bytes.Length > preamble.Length)
+            {
+                for (int i = 0; i < preamble.Length; i++)
+                {
+                    withPreample &= bytes[i] == preamble[i];
+                }
+            }
+
+            if (withPreample)
+                return Encoding.UTF8.GetString(bytes, preamble.Length, bytes.Length - preamble.Length);
+            else
+                return Encoding.UTF8.GetString(bytes);
+        }
+        #endregion Статические справочники
     }
 }
