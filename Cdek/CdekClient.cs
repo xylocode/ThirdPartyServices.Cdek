@@ -191,7 +191,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
 #if NET6_0
                     res = httpClient.PatchAsync(path, JsonContent.Create(req, options: jso)).Result;
 #endif
-#if NET7_0
+#if NET7_0_OR_GREATER || NET8_0_OR_GREATER
                     res = httpClient.PatchAsJsonAsync(path, req, jso).Result;
 #endif
                     break;
