@@ -68,6 +68,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 PropertyNamingPolicy = new JsonSnakeCaseNamingPolicy(),
             };
             jso.Converters.Add(new DateOnlyJsonConverter());
+            jso.Converters.Add(new TimeOnlyJsonConverter());
             jso.Converters.Add(new DateTimeJsonConverter());
             jso.Converters.Add(new DateTimeOffsetJsonConverter());
             jso.Converters.Add(new JsonStringEnumConverter());
@@ -547,6 +548,22 @@ namespace XyloCode.ThirdPartyServices.Cdek
             var req = new ReturnRequest { TariffCode = tariffCode };
             return Send<EntityResponse<Entity>, ReturnRequest>(RequestMethod.POST, $"/v2/orders/{orderUuid}/clientReturn", req);
         }
+
+
+        /// <summary>
+        /// Метод используется для получения доступных интервалов доставки.
+        /// </summary>
+        /// <param name="orderUuid">Идентификатор заказа в ИС СДЭК</param>
+        public DeliveryIntervalsResponse GetDeliveryIntervals(Guid orderUuid) =>
+            Send<DeliveryIntervalsResponse>(RequestMethod.GET, $"/v2/delivery/intervals?order_uuid={orderUuid}");
+
+
+        /// <summary>
+        /// Метод используется для получения доступных интервалов доставки.
+        /// </summary>
+        /// <param name="cdekNumber">Номер заказа СДЭК</param>
+        public DeliveryIntervalsResponse GetDeliveryIntervals(string cdekNumber) =>
+            Send<DeliveryIntervalsResponse>(RequestMethod.GET, $"/v2/delivery/intervals?cdek_number={cdekNumber}");
 
 
         #region Статические справочники

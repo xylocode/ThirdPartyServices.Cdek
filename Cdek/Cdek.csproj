@@ -8,7 +8,7 @@
     <RootNamespace>XyloCode.ThirdPartyServices.Cdek</RootNamespace>
     <PackageId>XyloCode.ThirdPartyServices.Cdek</PackageId>
     <Title>Cdek</Title>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <Authors>xylocode</Authors>
 	  <Copyright>Copyright (c) 2023 Sergey Korobeynikov</Copyright>
 	  <PackageTags>CDEK; СДЭК; API</PackageTags>
@@ -22,7 +22,7 @@
 	  <RepositoryType>git</RepositoryType>
 	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageReleaseNotes>NET 8.0 support.</PackageReleaseNotes>
+	  <PackageReleaseNotes>Update support for the official API to version 11/15/2023.</PackageReleaseNotes>
 	  <IncludeSymbols>True</IncludeSymbols>
 	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>

@@ -105,5 +105,15 @@ namespace XyloCode.ThirdPartyServices.Cdek.Models
         /// Работает ли офис с "Фулфилмент. Приход"
         /// </summary>
         public bool? Fulfillment { get; set; }
+
+        /// <summary>
+        /// Размер страницы
+        /// </summary>
+        public int? Size { get; set; }
+
+        /// <summary>
+        /// Номер страницы выборки результата
+        /// </summary>
+        public int? Page { get; set; }
     }
 }

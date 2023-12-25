@@ -9,7 +9,8 @@ An unofficial .NET full support client library for accessing the CDEK API v2.0.
 #### Supported Platforms
 
 - .NET 6.0 LTS;
-- .NET 7.0.
+- .NET 7.0;
+- .NET 8.0 LTS.
 
 ## CDEK
 
