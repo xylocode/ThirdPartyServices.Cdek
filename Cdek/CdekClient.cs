@@ -208,7 +208,11 @@ namespace XyloCode.ThirdPartyServices.Cdek
         }
 
 
-        private void Auth()
+        /// <summary>
+        /// Запрос JWT-токена у сервера авторизации.
+        /// Метод используется когда токен нужно хранить во внутреннем хранилище приложения, в иных случаях метод вызывается автоматически.
+        /// </summary>
+        public void Auth()
         {
             var oauth = new Dictionary<string, string>
             {
@@ -230,11 +234,31 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 .ReadFromJsonAsync<Models.Authorization>(jso)
                 .Result;
 
-            httpClient.DefaultRequestHeaders.Authorization = 
-                new AuthenticationHeaderValue("Bearer", auth.AccessToken);
-            expiresIn = DateTime.Now.AddSeconds(auth.ExpiresIn).Ticks;
+            SetAccessToken(auth.AccessToken, DateTime.Now.AddSeconds(auth.ExpiresIn).Ticks);
         }
 
+
+        /// <summary>
+        /// Токен авторизации СДЭК, используется для возможности сохранения в хранилище приложения.
+        /// </summary>
+        public string AccessToken => httpClient.DefaultRequestHeaders?.Authorization?.Parameter;
+
+        /// <summary>
+        /// Срок жизни текущего токена авторизации СДЭК
+        /// </summary>
+        public long ExpiresIn => expiresIn;
+
+
+        /// <summary>
+        /// Установка токена авторизации СДЭК из хранилища приложения.
+        /// </summary>
+        /// <param name="token">Токен авторизации</param>
+        /// <param name="expiresIn">Срок действия (ticks)</param>
+        public void SetAccessToken(string token, long expiresIn)
+        {
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            this.expiresIn = expiresIn;
+        }
 
         /// <summary>
         /// Метод предназначен для создания в ИС СДЭК заказа на доставку товаров до покупателей.
