@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using System.Threading;
+using System.Threading.Tasks;
 using XyloCode.ThirdPartyServices.Cdek.Enums;
 using XyloCode.ThirdPartyServices.Cdek.General;
 using XyloCode.ThirdPartyServices.Cdek.Helpers;
@@ -25,8 +26,8 @@ namespace XyloCode.ThirdPartyServices.Cdek
     {
         const string baseUri = "https://api.cdek.ru";
         const string testBaseUri = "https://api.edu.cdek.ru";
-        const string testClientId = "EMscd6r9JnFiQ3bLoyjJY6eM78JrJceI";
-        const string testClientSecret = "PjLZkKBHEiLK3YsjtNrt3TGNG0ahs3kG";
+        const string testClientId = "wqGwiQx0gg8mLtiEKsUinjVSICCjtTEP";
+        const string testClientSecret = "RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5";
 
         private readonly bool isTest = false;
         private readonly string clientId;
@@ -119,6 +120,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
             PATCH,
         }
 
+
         private TRes Send<TRes>(RequestMethod method, string path)
         {
             if (DateTime.Now.Ticks > expiresIn)
@@ -151,6 +153,22 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 .Result;
         }
 
+
+        private async Task<TRes> SendAsync<TRes>(RequestMethod method, string path)
+        {
+            if (DateTime.Now.Ticks > expiresIn)
+                Auth();
+            Thread.Sleep(1000);
+            HttpResponseMessage res = method switch
+            {
+                RequestMethod.GET => await httpClient.GetAsync(path),
+                RequestMethod.DELETE => await httpClient.DeleteAsync(path),
+                _ => throw new NotSupportedException(),
+            };
+            return await res.Content.ReadFromJsonAsync<TRes>(jso);
+        }
+
+
         private TRes Send<TRes, TReq>(RequestMethod method, string path, TReq req)
         {
             if (DateTime.Now.Ticks > expiresIn)
@@ -159,52 +177,44 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
             if (method == RequestMethod.GET || method == RequestMethod.DELETE)
                 path = string.Concat(path, "?", qss.Serialize(req));
-
-            HttpResponseMessage res;
-
-            switch (method)
+            HttpResponseMessage res = method switch
             {
-                case RequestMethod.GET:
-                    res = httpClient
-                        .GetAsync(path)
-                        .Result;
-                    break;
-
-                case RequestMethod.POST:
-                    res = httpClient
-                        .PostAsJsonAsync(path, req, jso)
-                        .Result;
-                    break;
-
-                case RequestMethod.PUT:
-                    res = httpClient
-                        .PutAsJsonAsync(path, req, jso)
-                        .Result;
-                    break;
-
-                case RequestMethod.DELETE:
-                    res = httpClient
-                        .DeleteAsync(path)
-                        .Result;
-                    break;
-
-                case RequestMethod.PATCH:
-#if NET6_0
-                    res = httpClient.PatchAsync(path, JsonContent.Create(req, options: jso)).Result;
-#endif
-#if NET7_0_OR_GREATER || NET8_0_OR_GREATER
-                    res = httpClient.PatchAsJsonAsync(path, req, jso).Result;
-#endif
-                    break;
-
-                default:
-                    throw new NotSupportedException();
-            }
-
+                RequestMethod.GET => httpClient.GetAsync(path).Result,
+                RequestMethod.POST => httpClient.PostAsJsonAsync(path, req, jso).Result,
+                RequestMethod.PUT => httpClient.PutAsJsonAsync(path, req, jso).Result,
+                RequestMethod.DELETE => httpClient.DeleteAsync(path).Result,
+                RequestMethod.PATCH => httpClient.PatchAsJsonAsync(path, req, jso).Result,
+                _ => throw new NotSupportedException(),
+            };
             return res
                 .Content
                 .ReadFromJsonAsync<TRes>(jso)
                 .Result;
+        }
+
+
+        private async Task<TRes> SendAsync<TRes, TReq>(RequestMethod method, string path, TReq req)
+        {
+            if (DateTime.Now.Ticks > expiresIn)
+                await AuthAsync();
+
+            Thread.Sleep(1000);
+
+            if (method == RequestMethod.GET || method == RequestMethod.DELETE)
+                path = string.Concat(path, "?", qss.Serialize(req));
+
+
+            HttpResponseMessage res = method switch
+            {
+                RequestMethod.GET => await httpClient.GetAsync(path),
+                RequestMethod.POST => await httpClient.PostAsJsonAsync(path, req, jso),
+                RequestMethod.PUT => await httpClient.PutAsJsonAsync(path, req, jso),
+                RequestMethod.DELETE => await httpClient.DeleteAsync(path),
+                RequestMethod.PATCH => await httpClient.PatchAsJsonAsync(path, req, jso),
+                _ => throw new NotSupportedException(),
+            };
+
+            return await res.Content.ReadFromJsonAsync<TRes>(jso);
         }
 
 
@@ -220,11 +230,11 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 { "client_secret", clientSecret },
                 { "grant_type", "client_credentials" }
             };
-            
+
             var form = new FormUrlEncodedContent(oauth);
 
             httpClient.DefaultRequestHeaders.Authorization = null;
-            
+
             var res = httpClient
                 .PostAsync("/v2/oauth/token?parameters", form)
                 .Result;
@@ -234,6 +244,27 @@ namespace XyloCode.ThirdPartyServices.Cdek
                 .ReadFromJsonAsync<Models.Authorization>(jso)
                 .Result;
 
+            SetAccessToken(auth.AccessToken, DateTime.Now.AddSeconds(auth.ExpiresIn).Ticks);
+        }
+
+
+        /// <summary>
+        /// Запрос JWT-токена у сервера авторизации.
+        /// Метод используется когда токен нужно хранить во внутреннем хранилище приложения, в иных случаях метод вызывается автоматически.
+        /// </summary>
+
+        public async Task AuthAsync()
+        {
+            var oauth = new Dictionary<string, string>
+            {
+                { "client_id", clientId },
+                { "client_secret", clientSecret },
+                { "grant_type", "client_credentials" }
+            };
+            var form = new FormUrlEncodedContent(oauth);
+            httpClient.DefaultRequestHeaders.Authorization = null;
+            var res = await httpClient.PostAsync("/v2/oauth/token?parameters", form);
+            var auth = await res.Content.ReadFromJsonAsync<Models.Authorization>(jso);
             SetAccessToken(auth.AccessToken, DateTime.Now.AddSeconds(auth.ExpiresIn).Ticks);
         }
 
@@ -260,6 +291,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
             this.expiresIn = expiresIn;
         }
 
+
         /// <summary>
         /// Метод предназначен для создания в ИС СДЭК заказа на доставку товаров до покупателей.
         /// Выделяется 2 типа заказов:
@@ -268,6 +300,17 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// </summary>
         public EntityResponse<Entity> NewOrder(Order order) =>
             Send<EntityResponse<Entity>, Order>(RequestMethod.POST, "/v2/orders", order);
+
+
+        /// <summary>
+        /// Метод предназначен для создания в ИС СДЭК заказа на доставку товаров до покупателей.
+        /// Выделяется 2 типа заказов:
+        /// “интернет-магазин” - может быть только у клиента с типом договора “Интернет-магазин”;
+        /// “доставка” может быть создан любым клиентом с договором(но доступны тарифы только для обычной доставки).
+        /// </summary>
+        public Task<EntityResponse<Entity>> NewOrderAsync(Order order) =>
+            SendAsync<EntityResponse<Entity>, Order>(RequestMethod.POST, "/v2/orders", order);
+
 
         /// <summary>
         /// Метод предназначен для получения детальной информации по заданному заказу.
@@ -278,6 +321,17 @@ namespace XyloCode.ThirdPartyServices.Cdek
         public EntityResponse<Order> GetOrder(Guid uuid) =>
             Send<EntityResponse<Order>>(RequestMethod.GET, $"/v2/orders/{uuid}");
 
+
+        /// <summary>
+        /// Метод предназначен для получения детальной информации по заданному заказу.
+        /// Есть возможность получить информацию в том числе о заказах, которые были созданы через другие каналы(личный кабинет, протокол v.1.5 и др.).
+        /// Но только по тем, которые были созданы после выдачи индивидуальных ключей доступа.
+        /// <param name="uuid">Идентификатор заказа в ИС СДЭК, по которому необходима информация</param>
+        /// <summary>
+        public Task<EntityResponse<Order>> GetOrderAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Order>>(RequestMethod.GET, $"/v2/orders/{uuid}");
+
+
         /// <summary>
         /// Метод предназначен для получения детальной информации по заданному заказу.
         /// Есть возможность получить информацию в том числе о заказах, которые были созданы через другие каналы(личный кабинет, протокол v.1.5 и др.).
@@ -286,6 +340,17 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// <summary>
         public EntityResponse<Order> GetOrder(string cdekNumber) =>
             Send<EntityResponse<Order>>(RequestMethod.GET, $"/v2/orders?cdek_number={cdekNumber}");
+
+
+        /// <summary>
+        /// Метод предназначен для получения детальной информации по заданному заказу.
+        /// Есть возможность получить информацию в том числе о заказах, которые были созданы через другие каналы(личный кабинет, протокол v.1.5 и др.).
+        /// Но только по тем, которые были созданы после выдачи индивидуальных ключей доступа.
+        /// <param name="cdekNumber">Номер заказа СДЭК, по которому необходима информация</param>
+        /// <summary>
+        public Task<EntityResponse<Order>> GetOrderAsync(string cdekNumber) =>
+            SendAsync<EntityResponse<Order>>(RequestMethod.GET, $"/v2/orders?cdek_number={cdekNumber}");
+
 
         /// <summary>
         /// Метод предназначен для получения детальной информации по заданному заказу.
@@ -298,11 +363,29 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для получения детальной информации по заданному заказу.
+        /// Есть возможность получить информацию в том числе о заказах, которые были созданы через другие каналы(личный кабинет, протокол v.1.5 и др.).
+        /// Но только по тем, которые были созданы после выдачи индивидуальных ключей доступа.
+        /// </summary>
+        /// <param name="number">Номер заказа в ИС Клиента, по которому необходима информация</param>
+        public Task<EntityResponse<Order>> GetOrderByInternalNumberAsync(string number) =>
+            SendAsync<EntityResponse<Order>>(RequestMethod.GET, $"/v2/orders?im_number={number}");
+
+
+        /// <summary>
         /// Метод используется для изменения созданного ранее заказа.
         /// Условием возможности изменения заказа является отсутствие движения груза на складе СДЭК (т.е.статус заказа «Создан»).
         /// </summary>
         public EntityResponse<Entity> EditOrder(Order order) =>
             Send<EntityResponse<Entity>, Order>(RequestMethod.PATCH, "/v2/orders", order);
+
+
+        /// <summary>
+        /// Метод используется для изменения созданного ранее заказа.
+        /// Условием возможности изменения заказа является отсутствие движения груза на складе СДЭК (т.е.статус заказа «Создан»).
+        /// </summary>
+        public Task<EntityResponse<Entity>> EditOrderAsync(Order order) =>
+            SendAsync<EntityResponse<Entity>, Order>(RequestMethod.PATCH, "/v2/orders", order);
 
 
         /// <summary>
@@ -312,6 +395,15 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// <param name="uuid">Идентификатор заказа в ИС СДЭК, который необходимо удалить</param>
         public EntityResponse<Entity> DeleteOrder(Guid uuid) =>
             Send<EntityResponse<Entity>>(RequestMethod.DELETE, $"/v2/orders/{uuid}");
+
+
+        /// <summary>
+        /// Метод предназначен для удаления заказа.
+        /// Условием возможности удаления заказа является отсутствие движения груза на складе СДЭК (статус заказа «Создан»).
+        /// </summary>
+        /// <param name="uuid">Идентификатор заказа в ИС СДЭК, который необходимо удалить</param>
+        public Task<EntityResponse<Entity>> DeleteOrderAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Entity>>(RequestMethod.DELETE, $"/v2/orders/{uuid}");
 
 
         /// <summary>
@@ -325,11 +417,29 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для регистрации отказа по заказу и дальнейшего возврата данного заказа в интернет-магазин.
+        /// После успешной регистрации отказа статус заказа переходит в "Не вручен" (код NOT_DELIVERED) с дополнительным статусом "Возврат, отказ от получения: Без объяснения" (код 11).
+        /// Заказ может быть отменен в любом статусе, пока не установлен статус "Вручен" или "Не вручен".
+        /// </summary>
+        /// <param name="uuid">Идентификатор заказа в ИС СДЭК, по которому необходимо зарегистрировать отказ</param>
+        public Task<EntityResponse<Entity>> RefusalAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Entity>>(RequestMethod.POST, $"/v2/orders/{uuid}/refusal");
+
+
+        /// <summary>
         /// Метод позволяет осуществить вызов курьера для забора груза со склада ИМ с последующей доставкой до склада СДЭК.
         /// Рекомендуемый минимальный диапазон времени для приезда курьера не менее 3х часов.
         /// </summary>
         public EntityResponse<Entity> NewPickup(Pickup pickup) =>
             Send<EntityResponse<Entity>, Pickup>(RequestMethod.POST, "/v2/intakes", pickup);
+
+
+        /// <summary>
+        /// Метод позволяет осуществить вызов курьера для забора груза со склада ИМ с последующей доставкой до склада СДЭК.
+        /// Рекомендуемый минимальный диапазон времени для приезда курьера не менее 3х часов.
+        /// </summary>
+        public Task<EntityResponse<Entity>> NewPickupAsync(Pickup pickup) =>
+            SendAsync<EntityResponse<Entity>, Pickup>(RequestMethod.POST, "/v2/intakes", pickup);
 
 
         /// <summary>
@@ -341,6 +451,14 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для получения информации по заявке на вызов курьера.
+        /// </summary>
+        /// <param name="uuid">Идентификатор заявки в ИС СДЭК, по которому необходима информация</param>
+        public Task<EntityResponse<Pickup>> GetPickupAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Pickup>>(RequestMethod.GET, $"/v2/intakes/{uuid}");
+
+
+        /// <summary>
         /// Метод предназначен для удаление заявки на вызов курьера.
         /// </summary>
         /// <param name="uuid">Идентификатор заявки в ИС СДЭК, которую необходимо удалить</param>
@@ -349,10 +467,25 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для удаление заявки на вызов курьера.
+        /// </summary>
+        /// <param name="uuid">Идентификатор заявки в ИС СДЭК, которую необходимо удалить</param>
+        public Task<EntityResponse<Entity>> DeletePickupAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Entity>>(RequestMethod.DELETE, $"/v2/intakes/{uuid}");
+
+
+        /// <summary>
         /// Метод используется для формирования квитанции в формате pdf к заказу/заказам.
         /// </summary>
         public EntityResponse<Entity> WaybillRequest(WaybillRequest req) =>
             Send<EntityResponse<Entity>, WaybillRequest>(RequestMethod.POST, "/v2/print/orders", req);
+
+
+        /// <summary>
+        /// Метод используется для формирования квитанции в формате pdf к заказу/заказам.
+        /// </summary>
+        public Task<EntityResponse<Entity>> WaybillRequestAsync(WaybillRequest req) =>
+            SendAsync<EntityResponse<Entity>, WaybillRequest>(RequestMethod.POST, "/v2/print/orders", req);
 
 
         /// <summary>
@@ -364,6 +497,14 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод используется для получения ссылки на квитанцию в формате pdf к заказу/заказам.
+        /// </summary>
+        /// <param name="uuid">Идентификатор квитанции, ссылку на которую необходимо получить</param>
+        public Task<EntityResponse<Waybill>> GetWaybillAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Waybill>>(RequestMethod.GET, $"/v2/print/orders/{uuid}");
+
+
+        /// <summary>
         /// Метод используется для формирования ШК места в формате pdf к заказу/заказам.
         /// Во избежание перегрузки платформы нельзя передавать более 100 номеров заказов в одном запросе.
         /// </summary>
@@ -372,11 +513,26 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод используется для формирования ШК места в формате pdf к заказу/заказам.
+        /// Во избежание перегрузки платформы нельзя передавать более 100 номеров заказов в одном запросе.
+        /// </summary>
+        public Task<EntityResponse<Entity>> BarcodeRequestAsync(BarcodeRequest req) =>
+            SendAsync<EntityResponse<Entity>, BarcodeRequest>(RequestMethod.POST, "/v2/print/barcodes", req);
+
+
+        /// <summary>
         /// Метод используется для получения ШК места в формате pdf к заказу/заказам.
         /// </summary>
         /// <param name="uuid">Идентификатор ШК места, ссылку на который необходимо получить</param>
         public EntityResponse<Barcode> GetBarcode(Guid uuid) =>
             Send<EntityResponse<Barcode>>(RequestMethod.GET, $"/v2/print/barcodes/{uuid}");
+
+        /// <summary>
+        /// Метод используется для получения ШК места в формате pdf к заказу/заказам.
+        /// </summary>
+        /// <param name="uuid">Идентификатор ШК места, ссылку на который необходимо получить</param>
+        public Task<EntityResponse<Barcode>> GetBarcodeAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Barcode>>(RequestMethod.GET, $"/v2/print/barcodes/{uuid}");
 
 
         /// <summary>
@@ -387,17 +543,40 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод позволяет фиксировать оговоренные с клиентом дату и время доставки (приезда курьера), а так же изменять адрес доставки.
+        /// </summary>
+        public Task<EntityResponse<Entity>> NewDeliveryAsync(Delivery delivery) =>
+            SendAsync<EntityResponse<Entity>, Delivery>(RequestMethod.POST, "/v2/delivery", delivery);
+
+
+        /// <summary>
         /// Метод используется для получения информации об оговоренных с клиентом дате и времени доставки (приезда курьера), а так же возможном новом адресе доставки.
         /// </summary>
         /// <param name="uuid">Идентификатор договоренности о доставке в ИС СДЭК.</param>
         public EntityResponse<Delivery> GetDelivery(Guid uuid) =>
             Send<EntityResponse<Delivery>>(RequestMethod.GET, $"/v2/delivery/{uuid}");
 
+
+        /// <summary>
+        /// Метод используется для получения информации об оговоренных с клиентом дате и времени доставки (приезда курьера), а так же возможном новом адресе доставки.
+        /// </summary>
+        /// <param name="uuid">Идентификатор договоренности о доставке в ИС СДЭК.</param>
+        public Task<EntityResponse<Delivery>> GetDeliveryAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Delivery>>(RequestMethod.GET, $"/v2/delivery/{uuid}");
+
+
         /// <summary>
         /// Метод предназначен для регистрации преалерта (реестра заказов, которые клиент собирается передать на склад СДЭК для дальнейшей доставки).
         /// </summary>
         public EntityResponse<Entity> NewPrealert(Prealert prealert) =>
             Send<EntityResponse<Entity>, Prealert>(RequestMethod.POST, "/v2/prealert", prealert);
+
+
+        /// <summary>
+        /// Метод предназначен для регистрации преалерта (реестра заказов, которые клиент собирается передать на склад СДЭК для дальнейшей доставки).
+        /// </summary>
+        public Task<EntityResponse<Entity>> NewPrealertAsync(Prealert prealert) =>
+            SendAsync<EntityResponse<Entity>, Prealert>(RequestMethod.POST, "/v2/prealert", prealert);
 
 
         /// <summary>
@@ -409,10 +588,25 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для получения информации по заданному преалерту.
+        /// </summary>
+        /// <param name="uuid">Идентификатор преалерта в ИС СДЭК, по которому необходима информация</param>
+        public Task<EntityResponse<Prealert>> GetPrealertAsync(Guid uuid) =>
+            SendAsync<EntityResponse<Prealert>>(RequestMethod.GET, $"/v2/prealert/{uuid}");
+
+
+        /// <summary>
         /// Метод используется для получения информации о паспортных данных (сообщает о готовности передавать заказы на таможню) по международным заказу/заказам.
         /// </summary>
         public OrdersResponse<PassportStatus> GetPassportInfo(PassportRequest req) =>
             Send<OrdersResponse<PassportStatus>, PassportRequest>(RequestMethod.GET, $"/v2/passport", req);
+
+
+        /// <summary>
+        /// Метод используется для получения информации о паспортных данных (сообщает о готовности передавать заказы на таможню) по международным заказу/заказам.
+        /// </summary>
+        public Task<OrdersResponse<PassportStatus>> GetPassportInfoAsync(PassportRequest req) =>
+            SendAsync<OrdersResponse<PassportStatus>, PassportRequest>(RequestMethod.GET, $"/v2/passport", req);
 
 
         /// <summary>
@@ -434,6 +628,24 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод используется для получения информации о чеке по заказу или за выбранный день.
+        /// </summary>
+        /// <param name="orderUuid">Идентификатор заказа в ИС СДЭК, по которому необходимо вернуть данные по чеку</param>
+        /// <param name="cdekNumber">Номер заказа СДЭК, по которому необходимо вернуть данные по чеку</param>
+        /// <param name="date">Дата, за которую необходимо вернуть данные по чекам</param>
+        public Task<ReceiptResponse> GetReceiptAsync(Guid? orderUuid = null, string cdekNumber = null, DateOnly? date = null)
+        {
+            var req = new ReceiptRequest
+            {
+                OrderUuid = orderUuid,
+                CdekNumber = cdekNumber,
+                Date = date
+            };
+            return SendAsync<ReceiptResponse, ReceiptRequest>(RequestMethod.GET, $"/v2/check", req);
+        }
+
+
+        /// <summary>
         /// Метод предназначен для получения информации о реестрах наложенных платежей, по которым клиенту был переведен наложенный платеж в заданную клиентом дату.
         /// </summary>
         /// <param name="date">Дата, за которую необходимо вернуть реестры наложенных платежей, по которым был переведен наложенный платеж</param>
@@ -445,6 +657,17 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для получения информации о реестрах наложенных платежей, по которым клиенту был переведен наложенный платеж в заданную клиентом дату.
+        /// </summary>
+        /// <param name="date">Дата, за которую необходимо вернуть реестры наложенных платежей, по которым был переведен наложенный платеж</param>
+        public Task<CashOnDeliveryRegisterResponse> GetCashOnDeliveryRegisterAsync(DateOnly date)
+        {
+            var dateStr = date.ToString("yyyy-MM-dd");
+            return SendAsync<CashOnDeliveryRegisterResponse>(RequestMethod.GET, $"/v2/registries?date={dateStr}");
+        }
+
+
+        /// <summary>
         /// Метод предназначен для получения информации о заказах, по которым был переведен наложенный платеж интернет-магазину в заданную дату.
         /// </summary>
         /// <param name="date">Дата, за которую необходимо вернуть список заказов, по которым был переведен наложенный платеж</param>
@@ -452,6 +675,17 @@ namespace XyloCode.ThirdPartyServices.Cdek
         {
             var dateStr = date.ToString("yyyy-MM-dd");
             return Send<OrdersResponse<OrderId2>>(RequestMethod.GET, $"/v2/payment?date={dateStr}");
+        }
+
+
+        /// <summary>
+        /// Метод предназначен для получения информации о заказах, по которым был переведен наложенный платеж интернет-магазину в заданную дату.
+        /// </summary>
+        /// <param name="date">Дата, за которую необходимо вернуть список заказов, по которым был переведен наложенный платеж</param>
+        public Task<OrdersResponse<OrderId2>> GetWireTransferAsync(DateOnly date)
+        {
+            var dateStr = date.ToString("yyyy-MM-dd");
+            return SendAsync<OrdersResponse<OrderId2>>(RequestMethod.GET, $"/v2/payment?date={dateStr}");
         }
 
 
@@ -473,10 +707,34 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Предназначены для отправки на URL клиента событий:
+        /// изменении статуса заказа;
+        /// готовности печатной формы.
+        /// </summary>
+        /// <param name="type">Тип события</param>
+        /// <param name="url">URL, на который клиент хочет получать вебхуки</param>
+        public Task<EntityResponse<Entity>> NewWebhookAsync(WebhookType type, string url)
+        {
+            if (isTest)
+                throw new NotImplementedException();
+
+            var req = new WebhookRequest { Type = type, Url = url };
+            return SendAsync<EntityResponse<Entity>, WebhookRequest>(RequestMethod.POST, "/v2/webhooks", req);
+        }
+
+
+        /// <summary>
         /// Метод предназначен для получения списка действующих офисов СДЭК.
         /// </summary>
         public IEnumerable<DeliveryPoint> GetDeliveryPoints() =>
             Send<List<DeliveryPoint>>(RequestMethod.GET, "/v2/deliverypoints");
+
+
+        /// <summary>
+        /// Метод предназначен для получения списка действующих офисов СДЭК.
+        /// </summary>
+        public Task<List<DeliveryPoint>> GetDeliveryPointsAsync() =>
+            SendAsync<List<DeliveryPoint>>(RequestMethod.GET, "/v2/deliverypoints");
 
 
         /// <summary>
@@ -487,11 +745,27 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для получения списка действующих офисов СДЭК.
+        /// </summary>
+        public Task<List<DeliveryPoint>> GetDeliveryPointsAsync(DeliveryPointsRequest request) =>
+            SendAsync<List<DeliveryPoint>, DeliveryPointsRequest>(RequestMethod.GET, "/v2/deliverypoints", request);
+
+
+        /// <summary>
         /// Метод предназначен для получения детальной информации о регионах.
         /// Список регионов может быть ограничен характеристиками, задаваемыми пользователем.
         /// </summary>
         public IEnumerable<Region> GetRegions() =>
             Send<List<Region>>(RequestMethod.GET, "/v2/location/regions");
+
+
+        /// <summary>
+        /// Метод предназначен для получения детальной информации о регионах.
+        /// Список регионов может быть ограничен характеристиками, задаваемыми пользователем.
+        /// </summary>
+        public Task<List<Region>> GetRegionsAsync() =>
+            SendAsync<List<Region>>(RequestMethod.GET, "/v2/location/regions");
+
 
         /// <summary>
         /// Метод предназначен для получения детальной информации о регионах.
@@ -499,6 +773,13 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// </summary>
         public IEnumerable<Region> GetRegions(RegionsRequest request) =>
             Send<List<Region>, RegionsRequest>(RequestMethod.GET, "/v2/location/regions", request);
+
+        /// <summary>
+        /// Метод предназначен для получения детальной информации о регионах.
+        /// Список регионов может быть ограничен характеристиками, задаваемыми пользователем.
+        /// </summary>
+        public Task<List<Region>> GetRegionsAsync(RegionsRequest request) =>
+            SendAsync<List<Region>, RegionsRequest>(RequestMethod.GET, "/v2/location/regions", request);
 
 
         /// <summary>
@@ -513,8 +794,24 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// Метод предназначен для получения детальной информации о населенных пунктах.
         /// Список населенных пунктов может быть ограничен характеристиками, задаваемыми пользователем.
         /// </summary>
+        public Task<List<City>> GetCitiesAsync() =>
+            SendAsync<List<City>>(RequestMethod.GET, "/v2/location/cities");
+
+
+        /// <summary>
+        /// Метод предназначен для получения детальной информации о населенных пунктах.
+        /// Список населенных пунктов может быть ограничен характеристиками, задаваемыми пользователем.
+        /// </summary>
         public IEnumerable<City> GetCities(CitiesRequest request) =>
             Send<List<City>, CitiesRequest>(RequestMethod.GET, "/v2/location/cities", request);
+
+
+        /// <summary>
+        /// Метод предназначен для получения детальной информации о населенных пунктах.
+        /// Список населенных пунктов может быть ограничен характеристиками, задаваемыми пользователем.
+        /// </summary>
+        public Task<List<City>> GetCitiesAsync(CitiesRequest request) =>
+            SendAsync<List<City>, CitiesRequest>(RequestMethod.GET, "/v2/location/cities", request);
 
 
         /// <summary>
@@ -527,11 +824,19 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для получения списка почтовых индексов.
+        /// (используется вместо метода "Список населённых пунктов")
+        /// </summary>
+        /// <param name="code">Код города, которому принадлежат почтовые индексы.</param>
+        public Task<PostalCodeResponse> GetPostalCodesAsync(int code) =>
+            SendAsync<PostalCodeResponse>(RequestMethod.GET, $"/v2/location/postalcodes/?code={code}");
+
+
+        /// <summary>
         /// Метод используется для расчета стоимости и сроков доставки по коду тарифа.
         /// </summary>
         public CalculationResponse Calculation(CalculationRequest req) {
-            if (req is null)
-                throw new ArgumentNullException(nameof(req));
+            ArgumentNullException.ThrowIfNull(req);
 
             if (!req.TariffCode.HasValue)
                 throw new Exception("Не задан код тарифа!");
@@ -541,14 +846,38 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод используется для расчета стоимости и сроков доставки по коду тарифа.
+        /// </summary>
+        public Task<CalculationResponse> CalculationAsync(CalculationRequest req)
+        {
+            ArgumentNullException.ThrowIfNull(req);
+
+            if (!req.TariffCode.HasValue)
+                throw new Exception("Не задан код тарифа!");
+
+            return SendAsync<CalculationResponse, CalculationRequest>(RequestMethod.POST, "/v2/calculator/tariff", req);
+        }
+
+
+        /// <summary>
         /// Метод используется клиентами для расчета стоимости и сроков доставки по всем доступным тарифам.
         /// </summary>
         public MultiCalculationResponse MultiCalculation(CalculationRequest req)
         {
-            if (req is null)
-                throw new ArgumentNullException(nameof(req));
-         
+            ArgumentNullException.ThrowIfNull(req);
+
             return Send<MultiCalculationResponse, CalculationRequest>(RequestMethod.POST, "/v2/calculator/tarifflist", req);
+        }
+
+
+        /// <summary>
+        /// Метод используется клиентами для расчета стоимости и сроков доставки по всем доступным тарифам.
+        /// </summary>
+        public Task<MultiCalculationResponse> MultiCalculationAsync(CalculationRequest req)
+        {
+            ArgumentNullException.ThrowIfNull(req);
+
+            return SendAsync<MultiCalculationResponse, CalculationRequest>(RequestMethod.POST, "/v2/calculator/tarifflist", req);
         }
 
 
@@ -557,7 +886,15 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// </summary>
         public OrdersResponse<OrderPhotoLink> GetPhotos(PhotoRequest req) =>
             Send<OrdersResponse<OrderPhotoLink>, PhotoRequest>(RequestMethod.POST, "/v2/photoDocument", req);
-        
+
+
+        /// <summary>
+        /// Метод используется для получения перечня заказов с ссылками на готовые к скачиванию архивы.
+        /// </summary>
+        public Task<OrdersResponse<OrderPhotoLink>> GetPhotosAsync(PhotoRequest req) =>
+            SendAsync<OrdersResponse<OrderPhotoLink>, PhotoRequest>(RequestMethod.POST, "/v2/photoDocument", req);
+
+
         /// <summary>
         /// Метод предназначен для оформления клиентских возвратов для интернет-магазинов.
         /// Клиентский возврат — это возврат, который оформляет сам клиент уже после вручения заказа.
@@ -575,6 +912,22 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
 
         /// <summary>
+        /// Метод предназначен для оформления клиентских возвратов для интернет-магазинов.
+        /// Клиентский возврат — это возврат, который оформляет сам клиент уже после вручения заказа.
+        /// Отличие от обычного возврата в конечном статусе прямого заказа: у клиентских возвратов конечный статус "вручен" и возврат оформляет сам клиент, у обычных возвратов, конечный статус "Не вручен" и возврат оформляется СДЭКом.
+        /// Для частично врученных заказов можно оформить и клиентский возврат и обычный возврат.
+        /// (клиентский возврат создается только для заказов интернет-магазина в конечном статусе "Вручен")
+        /// </summary>
+        /// <param name="orderUuid">Идентификатор прямого заказа в ИС СДЭК</param>
+        /// <param name="tariffCode">Код тарифа. Использовать тарифы, которые прописаны в договоре.</param>
+        public Task<EntityResponse<Entity>> NewReturnAsync(Guid orderUuid, int tariffCode)
+        {
+            var req = new ReturnRequest { TariffCode = tariffCode };
+            return SendAsync<EntityResponse<Entity>, ReturnRequest>(RequestMethod.POST, $"/v2/orders/{orderUuid}/clientReturn", req);
+        }
+
+
+        /// <summary>
         /// Метод используется для получения доступных интервалов доставки.
         /// </summary>
         /// <param name="orderUuid">Идентификатор заказа в ИС СДЭК</param>
@@ -585,10 +938,25 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// <summary>
         /// Метод используется для получения доступных интервалов доставки.
         /// </summary>
+        /// <param name="orderUuid">Идентификатор заказа в ИС СДЭК</param>
+        public Task<DeliveryIntervalsResponse> GetDeliveryIntervalsAsync(Guid orderUuid) =>
+            SendAsync<DeliveryIntervalsResponse>(RequestMethod.GET, $"/v2/delivery/intervals?order_uuid={orderUuid}");
+
+
+        /// <summary>
+        /// Метод используется для получения доступных интервалов доставки.
+        /// </summary>
         /// <param name="cdekNumber">Номер заказа СДЭК</param>
         public DeliveryIntervalsResponse GetDeliveryIntervals(string cdekNumber) =>
             Send<DeliveryIntervalsResponse>(RequestMethod.GET, $"/v2/delivery/intervals?cdek_number={cdekNumber}");
 
+
+        /// <summary>
+        /// Метод используется для получения доступных интервалов доставки.
+        /// </summary>
+        /// <param name="cdekNumber">Номер заказа СДЭК</param>
+        public Task<DeliveryIntervalsResponse> GetDeliveryIntervalsAsync(string cdekNumber) =>
+            SendAsync<DeliveryIntervalsResponse>(RequestMethod.GET, $"/v2/delivery/intervals?cdek_number={cdekNumber}");
 
         #region Статические справочники
         /// <summary>
@@ -632,7 +1000,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
         {
             return Currencies2[iso4217Code];
         }
-        
+
         private static IEnumerable<T> DeserializeList<T>(byte[] fileData)
             where T : class, new()
         {

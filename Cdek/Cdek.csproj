@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+	  <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 	  <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <AssemblyName>XyloCode.ThirdPartyServices.Cdek</AssemblyName>
     <RootNamespace>XyloCode.ThirdPartyServices.Cdek</RootNamespace>
     <PackageId>XyloCode.ThirdPartyServices.Cdek</PackageId>
     <Title>Cdek</Title>
-    <Version>1.6.0</Version>
+    <Version>1.7.0</Version>
     <Authors>xylocode</Authors>
-	  <Copyright>Copyright (c) 2024 Sergey Korobeynikov</Copyright>
+	  <Copyright>Copyright (c) 2024-2025 Sergey Korobeynikov</Copyright>
 	  <PackageTags>CDEK; СДЭК; API</PackageTags>
 	  <PackageIcon>LOGO.png</PackageIcon>
 	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -22,7 +22,7 @@
 	  <RepositoryType>git</RepositoryType>
 	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageReleaseNotes>Added the ability to set an authorization token from the application storage.</PackageReleaseNotes>
+	  <PackageReleaseNotes>Target platforms: .NET 8.0, .NET 10.0. Added asynchronous methods. Updated connection keys for test environment.</PackageReleaseNotes>
 	  <IncludeSymbols>True</IncludeSymbols>
 	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
