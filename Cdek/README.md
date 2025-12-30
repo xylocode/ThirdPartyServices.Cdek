@@ -8,9 +8,8 @@ An unofficial .NET full support client library for accessing the CDEK API v2.0.
 
 #### Supported Platforms
 
-- .NET 6.0 LTS;
-- .NET 7.0;
 - .NET 8.0 LTS.
+- .NET 10.0 LTS.
 
 ## CDEK
 
@@ -34,17 +33,23 @@ namespace CdekTest
     {
         static void Main(string[] args)
         {
-            var clientId = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-            var clientSecret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-            
+            //var clientId = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+            //var clientSecret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
             var tracer = new LoggingHandler(); // for tracing, needed only for debugging
 
-            var api = new CdekClient(clientId, clientSecret, httpMessageHandler: tracer);
-            var result = api.GetOrder("1234567890");
+            //var api = new CdekClient(clientId, clientSecret, httpMessageHandler: tracer);
+            //var result = api.GetOrder("1234567890");
 
             // for testing (using https://api.edu.cdek.ru/ as base URI)
             var testApi = new CdekClient(httpMessageHandler: tracer);
-            var offices = testApi.GetDeliveryPoints();
+            var offices = testApi.GetDeliveryPointsAsync().Result;
+
+            foreach (var office in offices)
+            {
+                Console.WriteLine("{0}:\t{1}", office.Code, office.Location.Address);
+            }
+
 
             Console.Beep();
             Console.ReadLine();
