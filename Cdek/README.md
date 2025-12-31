@@ -27,11 +27,17 @@ Full support.
 using XyloCode.ThirdPartyServices.Cdek;
 using XyloCode.ThirdPartyServices.Cdek.Helpers;
 
-namespace CdekTest
+namespace CdekTestConsole
 {
     internal class Program
     {
         static void Main(string[] args)
+        {
+            Task.Run(async () => await Test());
+            Console.ReadLine();
+        }
+
+        private static async Task Test()
         {
             //var clientId = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
             //var clientSecret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
@@ -43,9 +49,9 @@ namespace CdekTest
 
             // for testing (using https://api.edu.cdek.ru/ as base URI)
             var testApi = new CdekClient(httpMessageHandler: tracer);
-            var offices = testApi.GetDeliveryPointsAsync().Result;
+            var offices = testApi.GetDeliveryPointsAsync();
 
-            foreach (var office in offices)
+            await foreach (var office in offices)
             {
                 Console.WriteLine("{0}:\t{1}", office.Code, office.Location.Address);
             }

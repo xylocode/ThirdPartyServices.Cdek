@@ -15,7 +15,7 @@ namespace XyloCode.ThirdPartyServices.Cdek.Helpers
             Console.WriteLine(request.ToString());
             if (request.Content != null)
             {
-                Console.WriteLine(await request.Content.ReadAsStringAsync());
+                Console.WriteLine(await request.Content.ReadAsStringAsync(cancellationToken));
             }
             Console.WriteLine();
 
@@ -25,7 +25,7 @@ namespace XyloCode.ThirdPartyServices.Cdek.Helpers
             Console.WriteLine(response.ToString());
             if (response.Content != null)
             {
-                Console.WriteLine(await response.Content.ReadAsStringAsync());
+                Console.WriteLine(await response.Content.ReadAsStringAsync(cancellationToken));
             }
             Console.WriteLine();
 
