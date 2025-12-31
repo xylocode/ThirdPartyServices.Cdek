@@ -31,11 +31,34 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
         private readonly string clientId;
         private readonly string clientSecret;
-        private long expiresIn = 0;
 
         private readonly HttpClient httpClient;
         private readonly JsonSerializerOptions jso;
         private readonly QueryStringSerializer qss;
+
+
+        /// <summary>
+        /// Признак работы с тестовой средой https://api.edu.cdek.ru
+        /// </summary>
+        public bool IsTest { get; } = false;
+
+
+        /// <summary>
+        /// Токен авторизации СДЭК, используется для возможности сохранения в хранилище приложения.
+        /// </summary>
+        public string AccessToken
+        {
+            get => httpClient.DefaultRequestHeaders?.Authorization?.Parameter;
+            set => httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", value);
+        }
+
+
+        /// <summary>
+        /// Срок жизни текущего токена авторизации СДЭК
+        /// </summary>
+        public long ExpiresIn { get; set; } = 0;
+
+
 
         public CdekClient(HttpMessageHandler httpMessageHandler = null, bool disposeHandler = true) :
             this(testClientId, testClientSecret, testBaseUri, httpMessageHandler, disposeHandler)
@@ -108,12 +131,6 @@ namespace XyloCode.ThirdPartyServices.Cdek
             NonCallReasons = new(nonCallReasons);
         }
 
-
-        /// <summary>
-        /// Признак работы с тестовой средой https://api.edu.cdek.ru
-        /// </summary>
-        public bool IsTest { get; } = false;
-
         private enum RequestMethod : byte
         {
             GET,
@@ -125,7 +142,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
         private async Task<TRes> SendAsync<TRes>(RequestMethod method, string path, CancellationToken cancellationToken = default)
         {
-            if (DateTime.Now.Ticks > expiresIn)
+            if (DateTime.UtcNow.Ticks > ExpiresIn)
                 await AuthAsync(cancellationToken);
             Thread.Sleep(1000);
             HttpResponseMessage res = method switch
@@ -140,7 +157,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
         private async Task<TRes> SendAsync<TRes, TReq>(RequestMethod method, string path, TReq req, CancellationToken cancellationToken = default)
         {
-            if (DateTime.Now.Ticks > expiresIn)
+            if (DateTime.UtcNow.Ticks > ExpiresIn)
                 await AuthAsync(cancellationToken);
 
             Thread.Sleep(1000);
@@ -165,7 +182,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
         private async IAsyncEnumerable<TRes> GetAsyncEnumerable<TRes>(string path, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            if (DateTime.Now.Ticks > expiresIn)
+            if (DateTime.UtcNow.Ticks > ExpiresIn)
                 await AuthAsync(cancellationToken);
             Thread.Sleep(1000);
 
@@ -176,7 +193,7 @@ namespace XyloCode.ThirdPartyServices.Cdek
 
         private async IAsyncEnumerable<TRes> GetAsyncEnumerable<TRes, TReq>(string path, TReq req, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            if (DateTime.Now.Ticks > expiresIn)
+            if (DateTime.UtcNow.Ticks > ExpiresIn)
                 await AuthAsync(cancellationToken);
             Thread.Sleep(1000);
 
@@ -191,7 +208,6 @@ namespace XyloCode.ThirdPartyServices.Cdek
         /// Запрос JWT-токена у сервера авторизации.
         /// Метод используется когда токен нужно хранить во внутреннем хранилище приложения, в иных случаях метод вызывается автоматически.
         /// </summary>
-
         public async Task AuthAsync(CancellationToken cancellationToken = default)
         {
             var oauth = new Dictionary<string, string>
@@ -204,30 +220,9 @@ namespace XyloCode.ThirdPartyServices.Cdek
             httpClient.DefaultRequestHeaders.Authorization = null;
             var res = await httpClient.PostAsync("/v2/oauth/token?parameters", form, cancellationToken);
             var auth = await res.Content.ReadFromJsonAsync<Models.Authorization>(jso, cancellationToken);
-            SetAccessToken(auth.AccessToken, DateTime.Now.AddSeconds(auth.ExpiresIn).Ticks);
-        }
 
-
-        /// <summary>
-        /// Токен авторизации СДЭК, используется для возможности сохранения в хранилище приложения.
-        /// </summary>
-        public string AccessToken => httpClient.DefaultRequestHeaders?.Authorization?.Parameter;
-
-        /// <summary>
-        /// Срок жизни текущего токена авторизации СДЭК
-        /// </summary>
-        public long ExpiresIn => expiresIn;
-
-
-        /// <summary>
-        /// Установка токена авторизации СДЭК из хранилища приложения.
-        /// </summary>
-        /// <param name="token">Токен авторизации</param>
-        /// <param name="expiresIn">Срок действия (ticks)</param>
-        public void SetAccessToken(string token, long expiresIn)
-        {
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            this.expiresIn = expiresIn;
+            this.AccessToken = auth.AccessToken;
+            this.ExpiresIn = DateTime.UtcNow.AddSeconds(auth.ExpiresIn).Ticks;
         }
 
 

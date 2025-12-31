@@ -8,7 +8,7 @@
     <RootNamespace>XyloCode.ThirdPartyServices.Cdek</RootNamespace>
     <PackageId>XyloCode.ThirdPartyServices.Cdek</PackageId>
     <Title>Cdek</Title>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>xylocode</Authors>
 	  <Copyright>Copyright (c) 2024-2025 Sergey Korobeynikov</Copyright>
 	  <PackageTags>CDEK; СДЭК; API</PackageTags>
@@ -22,7 +22,12 @@
 	  <RepositoryType>git</RepositoryType>
 	  <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageReleaseNotes>Target platforms: .NET 8.0, .NET 10.0. Added asynchronous methods. Updated connection keys for test environment.</PackageReleaseNotes>
+	  <PackageReleaseNotes>
+		  Target platforms: .NET 8.0, .NET 10.0.
+		  Added asynchronous methods.
+		  Updated connection keys for test environment.
+		  The ability to set the access token and its expiration time via the AccessToken and ExpiresIn properties has been added.
+	  </PackageReleaseNotes>
 	  <IncludeSymbols>True</IncludeSymbols>
 	  <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>

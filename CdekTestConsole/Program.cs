@@ -1,4 +1,6 @@
-﻿using XyloCode.ThirdPartyServices.Cdek;
+﻿using System;
+using System.Threading.Tasks;
+using XyloCode.ThirdPartyServices.Cdek;
 using XyloCode.ThirdPartyServices.Cdek.Helpers;
 
 namespace CdekTestConsole
@@ -29,10 +31,7 @@ namespace CdekTestConsole
             {
                 Console.WriteLine("{0}:\t{1}", office.Code, office.Location.Address);
             }
-
-
             Console.Beep();
-            Console.ReadLine();
         }
     }
 }
